@@ -1,52 +1,51 @@
 import './App.css';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import CardList from './components/card-list/card-list.component';
 import SearchBox from './components/search-box/search-box.component';
+import { getData } from './utils/fetch.data';
+
+const URL: string = 'https://jsonplaceholder.typicode.com/users';
+
+export type Monster = {
+  name: string;
+  id: string;
+  email: string;
+};
 
 const App = () => {
   const [searchField, setSearchField] = useState('');
-  const [monsters, setMonsters] = useState([]);
-  const [title, setTitle] = useState('');
+  const [monsters, setMonsters] = useState<Monster[]>([]);
   const [filteredMonsters, setFilteredMonsters] = useState(monsters);
 
   useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/users')
-      .then((response) => response.json())
-      .then((users) => setMonsters(users));
+    const fetchUsers = async () => {
+      const users = await getData<Monster[]>(URL);
+      setMonsters(users);
+    };
+    fetchUsers();
   }, []);
 
   // adding monsters as a dependent causes the filered array to appear on component mount
   useEffect(() => {
-    const newFilteredMonsters = monsters.filter((monster) => {
+    const newFilteredMonsters = monsters.filter((monster: Monster) => {
       return monster.name.toLowerCase().includes(searchField.toLowerCase());
     });
     setFilteredMonsters(newFilteredMonsters);
   }, [searchField, monsters]);
 
-
-  const onSearchChange = (e) => {
+  const onSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchField(e.target.value);
   };
 
-  const onTitleChange = (e) => {
-    setTitle(e.target.value);
-  };
-
-
   return (
     <div className="App">
-      <h1>{title}</h1>
+      <h1>Monsters Rolodex </h1>
       <SearchBox
         placeholder="search monsters"
         onChangeHandler={onSearchChange}
         className="search"
       />
       <br />
-      <SearchBox
-        placeholder="search title"
-        onChangeHandler={onTitleChange}
-        className="search"
-      />
       <CardList monsters={filteredMonsters} />
     </div>
   );
